@@ -1,6 +1,6 @@
 // Includes
 //=============================================================================================================================
-#include "button.h"
+#include "battery.h"
 #include "st7735.h"
 //=============================================================================================================================
 
@@ -95,8 +95,15 @@ uint8_t getBattPercent(float voltage)
 //================================================================================================================================================
 
 //----------------------------------------------------------------------------
-void greenbattery(int16_t x0, int16_t y0, uint8_t percent)
+void greenbattery(t_batt batt)
 {	
+	if(batt.crutch != 1)
+		return;
+	
+	int16_t x0 = batt.x; 
+	int16_t y0 = batt.y;  
+	uint8_t percent = batt.prcnt;
+	
 	//Отрисовка зоны заряда батареи
 	uint16_t widthMaxCharge;  //Длина области заряда батареи при 100% заряда	
 	uint16_t widthCharge;			//Длина области заряда батареи в зависимости от percent
@@ -141,8 +148,15 @@ void greenbattery(int16_t x0, int16_t y0, uint8_t percent)
 
 
 //----------------------------------------------------------------------------
-void gradientbattery(int16_t x0, int16_t y0, uint8_t percent)
+void gradientbattery(t_batt batt)
 {	
+	if(batt.crutch != 1)
+		return;
+	
+	int16_t x0 = batt.x; 
+	int16_t y0 = batt.y;  
+	uint8_t percent = batt.prcnt;
+		
 	//Отрисовка зоны заряда батареи
 	uint16_t widthMaxCharge;  //Длина области заряда батареи при 100% заряда	
 	uint16_t widthCharge;			//Длина области заряда батареи в зависимости от percent
@@ -199,8 +213,15 @@ void gradientbattery(int16_t x0, int16_t y0, uint8_t percent)
 
 
 //----------------------------------------------------------------------------
-void fsgrnyllwrdbattery(int16_t x0, int16_t y0, uint8_t percent)
+void fsgrnyllwrdbattery(t_batt batt)
 {	
+	if(batt.crutch != 1)
+		return;
+	
+	int16_t x0 = batt.x; 
+	int16_t y0 = batt.y;  
+	uint8_t percent = batt.prcnt;
+	
 	//Отрисовка зоны заряда батареи
 	uint16_t widthMaxCharge;  		//Длина области заряда батареи при 100% заряда	
 	uint16_t widthChargeSeg;			//Длина одного сегмента заряда
@@ -269,31 +290,38 @@ void fsgrnyllwrdbattery(int16_t x0, int16_t y0, uint8_t percent)
 
 //================================================================================================================================================
 
-
 //----------------------------------------------------------------------------
-void plot_batt(int16_t x0, int16_t y0)
+void init_batt(t_batt *ptrbatt, void (*ptrdesign)(t_batt), int16_t x0, int16_t y0)
 {
-	float vout;				//Снимаемое с источника напряжение
-	vout = getBattVoltage();
+	//Снимаемое с источника напряжение
+	ptrbatt -> vout = getBattVoltage();
 	
-	uint8_t prcnt;	 //Процент заряда батареи
-	prcnt = getBattPercent(vout);
+	//Процент заряда батареи
+	ptrbatt -> prcnt  = getBattPercent(ptrbatt -> vout);
 	
-	//Выбор дизайна батареи(раскомментировать для выбора)
-	//greenbattery(10, 10, prcnt);
-	//gradientbattery(10, 10, prcnt);
-	fsgrnyllwrdbattery(10, 10, prcnt);
+	ptrbatt -> x = x0;
+	ptrbatt -> y = y0;
+	
+	ptrbatt -> design = *ptrdesign;
 }
 //----------------------------------------------------------------------------
 
 
 //----------------------------------------------------------------------------
-void print_prcntbatt(int16_t x0, int16_t y0, uint16_t color)
+void plot_batt(t_batt batt)
+{
+	batt.crutch = 1;
+	batt.design(batt);
+}
+//----------------------------------------------------------------------------
+
+
+//----------------------------------------------------------------------------
+void print_prcntbatt(t_batt batt, int16_t x0, int16_t y0, uint16_t color)
 {
 	set_cursor(x0, y0, 0);
 	
-	float vout = getBattVoltage(); 
-	uint8_t prcnt = getBattPercent(1.8);
+	uint8_t prcnt = batt.prcnt;
 	
 	print_IntNum(prcnt, ST7735_COLOR_WHITE, 1, 1);
 	
